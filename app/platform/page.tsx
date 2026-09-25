@@ -972,15 +972,15 @@ export default function PlatformPage() {
         onDismiss={() => setLowBatteryAlert(null)}
       />
 
-      {/* 0. TOP COMMAND BAR — Full-width sticky above navbar */}
+      {/* 0. TOP COMMAND BAR — Full-width sticky single-row with all controls side-by-side with heading */}
       <div
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 60,
           margin: '0 -24px',
-          padding: '10px 24px',
-          background: 'rgba(8, 12, 20, 0.88)',
+          padding: '8px 24px',
+          background: 'rgba(8, 12, 20, 0.92)',
           backdropFilter: 'blur(28px) saturate(200%)',
           WebkitBackdropFilter: 'blur(28px) saturate(200%)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.09)',
@@ -988,64 +988,50 @@ export default function PlatformPage() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 14,
-          flexWrap: 'wrap',
+          gap: 12,
+          flexWrap: 'nowrap',
+          overflowX: 'auto',
         }}
       >
-        {/* Left: Brand + Status */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 17, fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 6 }}>
-              CORE · Tactical Fleet Coordination
-            </h1>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '2px 10px',
-                borderRadius: 9999,
-                background: controllerOnline ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.2)',
-                color: controllerOnline ? '#4ade80' : '#f87171',
-                border: `1px solid ${controllerOnline ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.4)'}`,
-              }}
-            >
-              {controllerOnline ? 'Central Controller ONLINE' : '100% P2P Mesh Mode'}
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '2px 10px',
-                borderRadius: 9999,
-                background: 'rgba(6, 182, 212, 0.12)',
-                color: '#38bdf8',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-              }}
-            >
-              Enterprise HaLow Mesh Core
-            </span>
-          </div>
-          <p style={{ fontSize: 10.5, color: '#64748b', margin: '2px 0 0', lineHeight: 1.3 }}>
-            Coordination &amp; Optimization for Robotic Execution · Decentralized P2P Task Negotiation · Collision Detours &amp; Deadlock Recovery
-          </p>
+        {/* Left: Brand + Status Badges */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#f8fafc', margin: 0, letterSpacing: '-0.025em', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CORE</span>
+            <span style={{ color: '#475569', fontWeight: 400 }}>·</span>
+            <span style={{ color: '#f8fafc' }}>Tactical Fleet Coordination</span>
+          </h1>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 11px',
+              borderRadius: 9999,
+              whiteSpace: 'nowrap',
+              background: controllerOnline ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.2)',
+              color: controllerOnline ? '#4ade80' : '#f87171',
+              border: `1px solid ${controllerOnline ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.4)'}`,
+            }}
+          >
+            {controllerOnline ? 'Central Controller ONLINE' : '100% P2P Mesh Mode'}
+          </span>
         </div>
 
-        {/* Right: Overlays + Actions */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* Right: Overlays, Supabase, Sync Cloud, Run Demo, Inject Deadlock (side of heading) */}
+        <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'nowrap', flexShrink: 0 }}>
           {/* Overlay pills */}
           <div
             style={{
               display: 'flex',
-              gap: 5,
+              gap: 4,
               alignItems: 'center',
-              padding: '4px 8px',
+              padding: '3px 8px',
               borderRadius: 9999,
               background: 'rgba(0, 0, 0, 0.4)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08)',
             }}
           >
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 4px' }}>OVERLAYS</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 3px' }}>OVERLAYS</span>
             {([
               { key: 'mesh', label: 'Mesh', active: layerMesh, set: setLayerMesh, color: '#38bdf8' },
               { key: 'conflicts', label: 'Conflicts', active: layerConflicts, set: setLayerConflicts, color: '#f87171' },
@@ -1056,8 +1042,8 @@ export default function PlatformPage() {
                 key={o.key}
                 onClick={() => o.set((p: boolean) => !p)}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '3px 10px',
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  padding: '3px 9px',
                   borderRadius: 9999,
                   fontSize: 10.5,
                   fontWeight: 700,
@@ -1067,6 +1053,7 @@ export default function PlatformPage() {
                   color: o.active ? o.color : '#64748b',
                   boxShadow: o.active ? `inset 0 1px 1px rgba(255,255,255,0.35)` : 'none',
                   transition: 'all 0.18s cubic-bezier(0.16,1,0.3,1)',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <span style={{ fontSize: 7 }}>{o.active ? '●' : '○'}</span>
@@ -1075,80 +1062,81 @@ export default function PlatformPage() {
             ))}
           </div>
 
-          {/* Supabase Cloud Live Sync Pill & Action */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div
-              title={supabaseStatus.message}
+          {/* Supabase Status Pill */}
+          <div
+            title={supabaseStatus.message}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 10px',
+              borderRadius: 9999,
+              background: supabaseStatus.connected
+                ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)')
+                : 'rgba(100, 116, 139, 0.15)',
+              border: `1px solid ${
+                supabaseStatus.connected
+                  ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)')
+                  : 'rgba(100, 116, 139, 0.3)'
+              }`,
+              fontSize: 10.5,
+              fontWeight: 700,
+              color: supabaseStatus.connected
+                ? (supabaseStatus.tablesReady ? '#4ade80' : '#facc15')
+                : '#94a3b8',
+              backdropFilter: 'blur(12px)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '5px 12px',
-                borderRadius: 9999,
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
                 background: supabaseStatus.connected
-                  ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)')
-                  : 'rgba(100, 116, 139, 0.15)',
-                border: `1px solid ${
-                  supabaseStatus.connected
-                    ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)')
-                    : 'rgba(100, 116, 139, 0.3)'
-                }`,
-                fontSize: 11,
-                fontWeight: 700,
-                color: supabaseStatus.connected
-                  ? (supabaseStatus.tablesReady ? '#4ade80' : '#facc15')
-                  : '#94a3b8',
-                backdropFilter: 'blur(12px)',
+                  ? (supabaseStatus.tablesReady ? '#22c55e' : '#eab308')
+                  : '#64748b',
+                boxShadow: supabaseStatus.connected && supabaseStatus.tablesReady ? '0 0 6px #22c55e' : 'none',
               }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: supabaseStatus.connected
-                    ? (supabaseStatus.tablesReady ? '#22c55e' : '#eab308')
-                    : '#64748b',
-                  boxShadow: supabaseStatus.connected && supabaseStatus.tablesReady ? '0 0 6px #22c55e' : 'none',
-                }}
-              />
-              <span>{supabaseStatus.tablesReady ? 'Supabase Synced' : (supabaseStatus.connected ? 'Supabase Online' : 'Supabase Offline')}</span>
-            </div>
-
-            <button
-              onClick={handleManualSync}
-              disabled={supabaseStatus.isSyncing}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '6px 14px',
-                borderRadius: 9999,
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: supabaseStatus.isSyncing ? 'not-allowed' : 'pointer',
-                background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%)',
-                border: '1px solid rgba(56, 189, 248, 0.5)',
-                color: '#38bdf8',
-                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.4)',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
-              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-            >
-              <span>☁️</span>
-              <span>{supabaseStatus.isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
-            </button>
+            />
+            <span>{supabaseStatus.tablesReady ? 'Supabase Synced' : (supabaseStatus.connected ? 'Supabase Online' : 'Supabase Offline')}</span>
           </div>
+
+          {/* Sync Cloud */}
+          <button
+            onClick={handleManualSync}
+            disabled={supabaseStatus.isSyncing}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '5px 12px',
+              borderRadius: 9999,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: supabaseStatus.isSyncing ? 'not-allowed' : 'pointer',
+              background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              color: '#38bdf8',
+              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.4)',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <span>☁️</span>
+            <span>{supabaseStatus.isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+          </button>
 
           {/* Run Demo */}
           <button
             onClick={handleRunDemo}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              padding: '7px 16px',
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '5px 14px',
               borderRadius: 9999,
-              fontSize: 11.5,
+              fontSize: 11,
               fontWeight: 800,
               cursor: 'pointer',
               background: 'linear-gradient(180deg, rgba(56,189,248,0.95) 0%, rgba(37,99,235,0.95) 100%)',
@@ -1156,6 +1144,7 @@ export default function PlatformPage() {
               boxShadow: 'inset 0 1px 1.5px rgba(255,255,255,0.65), 0 4px 16px rgba(56,189,248,0.4)',
               color: '#fff',
               transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+              whiteSpace: 'nowrap',
             }}
             onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
             onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
@@ -1167,10 +1156,10 @@ export default function PlatformPage() {
           <button
             onClick={() => triggerDeadlockSimulation('R0001', 'R0002')}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              padding: '7px 14px',
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '5px 13px',
               borderRadius: 9999,
-              fontSize: 11.5,
+              fontSize: 11,
               fontWeight: 700,
               cursor: 'pointer',
               background: 'linear-gradient(180deg, rgba(239,68,68,0.92) 0%, rgba(185,28,28,0.92) 100%)',
@@ -1178,6 +1167,7 @@ export default function PlatformPage() {
               boxShadow: 'inset 0 1px 1.5px rgba(255,255,255,0.55), 0 4px 16px rgba(239,68,68,0.35)',
               color: '#fff',
               transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+              whiteSpace: 'nowrap',
             }}
             onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
             onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}

@@ -488,7 +488,7 @@ export default function TopologyNetworkView({ robots, zones, messages }: Props) 
           </div>
           <div>
             <div style={{ color: '#64748b', fontSize: 9.5, fontWeight: 700 }}>TX PACKETS</div>
-            <div style={{ color: '#f8fafc', fontWeight: 800, marginTop: 1 }}>{totalPackets.toLocaleString()}</div>
+            <div style={{ color: '#f8fafc', fontWeight: 800, marginTop: 1 }} suppressHydrationWarning>{totalPackets.toLocaleString()}</div>
           </div>
           <div>
             <div style={{ color: '#64748b', fontSize: 9.5, fontWeight: 700 }}>AVG LATENCY</div>
