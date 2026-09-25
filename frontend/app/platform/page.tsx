@@ -20,6 +20,18 @@ import RoveraResilienceView from '@/components/platform/RoveraResilienceView';
 import RoveraSwarmBenchmarkView from '@/components/platform/RoveraSwarmBenchmarkView';
 import AICommunicationPanel from '@/components/platform/AICommunicationPanel';
 import { generateAutonomousAIDialogue } from '@/lib/aiFleetAgent';
+import {
+  checkSupabaseHealth,
+  fetchRobots as fetchCloudRobots,
+  fetchZones as fetchCloudZones,
+  upsertRobot as upsertCloudRobot,
+  deleteRobot as deleteCloudRobot,
+  upsertZone as upsertCloudZone,
+  deleteZone as deleteCloudZone,
+  logMessage as logCloudMessage,
+  bulkSyncFleet,
+  subscribeToFleet,
+} from '@/lib/supabaseBackend';
 
 // Initial pre-configured seed robots (All idle standby at Fleet Staging Base on load)
 const INITIAL_ROBOTS: PlatformRobot[] = [
@@ -261,13 +273,119 @@ export default function PlatformPage() {
   } | null>(null);
 
 
-  // Add Log Message Helper
+  // Supabase Cloud State
+  const [supabaseStatus, setSupabaseStatus] = useState<{
+    connected: boolean;
+    tablesReady: boolean;
+    message: string;
+    isSyncing: boolean;
+  }>({
+    connected: false,
+    tablesReady: false,
+    message: 'Connecting to Supabase Cloud...',
+    isSyncing: false,
+  });
+
+  // Supabase Initial Connect & Cloud State Sync
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    async function initSupabase() {
+      try {
+        const health = await checkSupabaseHealth();
+        setSupabaseStatus(prev => ({
+          ...prev,
+          connected: health.connected,
+          tablesReady: health.tablesReady,
+          message: health.message,
+        }));
+
+        if (health.connected && health.tablesReady) {
+          const [{ data: cloudRobots }, { data: cloudZones }] = await Promise.all([
+            fetchCloudRobots(),
+            fetchCloudZones(),
+          ]);
+
+          if (cloudRobots && cloudRobots.length > 0) {
+            setRobots(cloudRobots);
+          } else {
+            await bulkSyncFleet(INITIAL_ROBOTS, INITIAL_ZONES);
+          }
+
+          if (cloudZones && cloudZones.length > 0) {
+            setZones(cloudZones);
+          }
+
+          // Realtime multi-client subscription
+          unsubscribe = subscribeToFleet(
+            ({ eventType, new: newRobot, old: oldId }) => {
+              if (eventType === 'INSERT' && newRobot) {
+                setRobots(prev => (prev.some(r => r.id === newRobot.id) ? prev : [...prev, newRobot]));
+              } else if (eventType === 'UPDATE' && newRobot) {
+                setRobots(prev => prev.map(r => (r.id === newRobot.id ? newRobot : r)));
+              } else if (eventType === 'DELETE' && oldId) {
+                setRobots(prev => prev.filter(r => r.id !== oldId.id));
+              }
+            },
+            ({ eventType, new: newZone, old: oldId }) => {
+              if (eventType === 'INSERT' && newZone) {
+                setZones(prev => (prev.some(z => z.id === newZone.id) ? prev : [...prev, newZone]));
+              } else if (eventType === 'UPDATE' && newZone) {
+                setZones(prev => prev.map(z => (z.id === newZone.id ? newZone : z)));
+              } else if (eventType === 'DELETE' && oldId) {
+                setZones(prev => prev.filter(z => z.id !== oldId.id));
+              }
+            }
+          );
+        }
+      } catch (err) {
+        console.warn('Supabase initialization fallback:', err);
+      }
+    }
+
+    initSupabase();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // Manual Push to Supabase Cloud
+  const handleManualSync = async () => {
+    setSupabaseStatus(prev => ({ ...prev, isSyncing: true }));
+    try {
+      const res = await bulkSyncFleet(robots, zones);
+      if (res.success) {
+        addMessage('Supabase Cloud', 'Fleet', '⚡ Complete fleet telemetry and work zone state synchronized to cloud database.', 'CONFIRM');
+        setSupabaseStatus(prev => ({
+          ...prev,
+          connected: true,
+          tablesReady: true,
+          isSyncing: false,
+          message: 'Cloud Synced',
+        }));
+      } else {
+        addMessage('Supabase Cloud', 'Fleet', `⚠️ Cloud sync notice: ${res.error}. Run supabase_schema.sql in Supabase SQL editor.`, 'ALERT');
+        setSupabaseStatus(prev => ({ ...prev, isSyncing: false, message: res.error || 'Sync failed' }));
+      }
+    } catch {
+      setSupabaseStatus(prev => ({ ...prev, isSyncing: false, message: 'Sync error' }));
+    }
+  };
+
+  // Add Log Message Helper (Local + Cloud Telemetry)
   const addMessage = (from: string, to: string, content: string, badge: 'STATUS' | 'LOGISTICS' | 'CONFIRM' | 'ALERT' = 'LOGISTICS') => {
     const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setMessages(prev => [
-      ...prev,
-      { id: 'm-' + Date.now() + Math.random(), timestamp: timeStr, fromRobot: from, toRobot: to, content, badge },
-    ]);
+    const newMsg: InterRobotMessage = {
+      id: 'm-' + Date.now() + Math.floor(Math.random() * 1000),
+      timestamp: timeStr,
+      fromRobot: from,
+      toRobot: to,
+      content,
+      badge,
+    };
+    setMessages(prev => [...prev, newMsg]);
+    logCloudMessage(newMsg).catch(() => {});
   };
 
   // Deadlock Simulation Handler (Corridor Contention, Tarjan Cycle Detection, AI Lateral Detour Prevention)
@@ -559,7 +677,14 @@ export default function PlatformPage() {
 
   // Zone Update & Delete Handlers
   const handleUpdateZone = (zoneId: string, updates: Partial<WorkZone>) => {
-    setZones(prev => prev.map(z => (z.id === zoneId ? { ...z, ...updates } : z)));
+    setZones(prev => {
+      const updatedList = prev.map(z => (z.id === zoneId ? { ...z, ...updates } : z));
+      const target = updatedList.find(z => z.id === zoneId);
+      if (target) {
+        upsertCloudZone(target).catch(() => {});
+      }
+      return updatedList;
+    });
   };
 
   const handleDeleteZone = (zoneId: string) => {
@@ -571,6 +696,7 @@ export default function PlatformPage() {
     );
     if (selectedZoneId === zoneId) setSelectedZoneId(null);
     addMessage('Dispatch', 'Fleet', `Work zone "${zoneToDelete?.name || zoneId}" deleted by operator.`, 'STATUS');
+    deleteCloudZone(zoneId).catch(() => {});
   };
 
   // Simulation Loop (Continuous Physical Travel, Work Countdown, Dependency Detection)
@@ -782,19 +908,26 @@ export default function PlatformPage() {
   const handleCreateRobot = (newBot: PlatformRobot) => {
     setRobots(prev => [...prev, newBot]);
     addMessage('Dispatch', newBot.name, `Robot commissioned into fleet: Role ${newBot.role}, Capacity ${newBot.capacity}kg.`, 'STATUS');
+    upsertCloudRobot(newBot).catch(() => {});
   };
 
   // Delete robot from fleet
   const handleDeleteRobot = (robotId: string) => {
     const bot = robots.find(r => r.id === robotId);
     setRobots(prev => prev.filter(r => r.id !== robotId));
+    setZones(prev =>
+      prev.map(z => (z.assignedRobotId === robotId ? { ...z, assignedRobotId: null, status: 'UNASSIGNED' } : z))
+    );
+    if (selectedRobotId === robotId) setSelectedRobotId(null);
     if (bot) addMessage('Dispatch', 'Fleet', `Robot ${bot.name} decommissioned from fleet.`, 'STATUS');
+    deleteCloudRobot(robotId).catch(() => {});
   };
 
   // Create new zone
   const handleCreateZone = (newZone: WorkZone) => {
     setZones(prev => [...prev, newZone]);
     addMessage('Dispatch', 'Fleet', `New Work Zone plotted: ${newZone.name} (${newZone.taskType}).`, 'STATUS');
+    upsertCloudZone(newZone).catch(() => {});
   };
 
   const idleRobots = robots.filter(r => r.state === 'IDLE');
@@ -940,6 +1073,72 @@ export default function PlatformPage() {
                 {o.label}
               </button>
             ))}
+          </div>
+
+          {/* Supabase Cloud Live Sync Pill & Action */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div
+              title={supabaseStatus.message}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '5px 12px',
+                borderRadius: 9999,
+                background: supabaseStatus.connected
+                  ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)')
+                  : 'rgba(100, 116, 139, 0.15)',
+                border: `1px solid ${
+                  supabaseStatus.connected
+                    ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)')
+                    : 'rgba(100, 116, 139, 0.3)'
+                }`,
+                fontSize: 11,
+                fontWeight: 700,
+                color: supabaseStatus.connected
+                  ? (supabaseStatus.tablesReady ? '#4ade80' : '#facc15')
+                  : '#94a3b8',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: supabaseStatus.connected
+                    ? (supabaseStatus.tablesReady ? '#22c55e' : '#eab308')
+                    : '#64748b',
+                  boxShadow: supabaseStatus.connected && supabaseStatus.tablesReady ? '0 0 6px #22c55e' : 'none',
+                }}
+              />
+              <span>{supabaseStatus.tablesReady ? 'Supabase Synced' : (supabaseStatus.connected ? 'Supabase Online' : 'Supabase Offline')}</span>
+            </div>
+
+            <button
+              onClick={handleManualSync}
+              disabled={supabaseStatus.isSyncing}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 14px',
+                borderRadius: 9999,
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: supabaseStatus.isSyncing ? 'not-allowed' : 'pointer',
+                background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                color: '#38bdf8',
+                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.4)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              <span>☁️</span>
+              <span>{supabaseStatus.isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+            </button>
           </div>
 
           {/* Run Demo */}
