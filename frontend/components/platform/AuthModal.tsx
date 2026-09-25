@@ -8,7 +8,7 @@ interface Props {
 
 export default function AuthModal({ isOpen, onLogin }: Props) {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('operator@hackfusion.org');
+  const [email, setEmail] = useState('operator@core.fleet');
   const [password, setPassword] = useState('••••••••');
   const [name, setName] = useState('Chief Fleet Commander');
   const [showForgot, setShowForgot] = useState(false);
@@ -54,21 +54,26 @@ export default function AuthModal({ isOpen, onLogin }: Props) {
               height: 56,
               margin: '0 auto 14px',
               borderRadius: 16,
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 28,
-              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
+              fontSize: 26,
+              fontWeight: 800,
+              color: '#ffffff',
+              boxShadow: '0 8px 24px rgba(6, 182, 212, 0.35)',
             }}
           >
-            🤖
+            C
+          </div>
+          <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 4 }}>
+            CORE · Coordination & Optimization for Robotic Execution
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f8fafc' }}>
             {showForgot ? 'Reset Password' : isSignUp ? 'Create Operator Account' : 'Fleet Command Access'}
           </h2>
           <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
-            Multi-Robot Zone Assignment & Coordination Platform
+            Autonomous Multi-Agent Robot Fleet Coordination Platform
           </p>
         </div>
 
@@ -81,7 +86,7 @@ export default function AuthModal({ isOpen, onLogin }: Props) {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="operator@hackfusion.org"
+              placeholder="operator@core.fleet"
               style={{
                 width: '100%',
                 padding: '12px 14px',

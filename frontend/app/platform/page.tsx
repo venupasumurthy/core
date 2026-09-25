@@ -6,8 +6,6 @@ import type {
   CoordinationAlert,
   InterRobotMessage,
 } from '@/types/platform';
-import AuthModal from '@/components/platform/AuthModal';
-import OnboardingModal from '@/components/platform/OnboardingModal';
 import CreateRobotModal from '@/components/platform/CreateRobotModal';
 import ZoneFormModal from '@/components/platform/ZoneFormModal';
 import CoordinationPromptModal from '@/components/platform/CoordinationPromptModal';
@@ -16,86 +14,123 @@ import ZoneCanvas from '@/components/platform/ZoneCanvas';
 import FleetSidebar from '@/components/platform/FleetSidebar';
 import TopologyNetworkView from '@/components/platform/TopologyNetworkView';
 import FleetOverviewBar from '@/components/platform/FleetOverviewBar';
+import RoveraConflictsView from '@/components/platform/RoveraConflictsView';
+import RoveraEnergyView from '@/components/platform/RoveraEnergyView';
+import RoveraResilienceView from '@/components/platform/RoveraResilienceView';
+import RoveraSwarmBenchmarkView from '@/components/platform/RoveraSwarmBenchmarkView';
+import AICommunicationPanel from '@/components/platform/AICommunicationPanel';
+import { generateAutonomousAIDialogue } from '@/lib/aiFleetAgent';
 import Link from 'next/link';
 
-// Initial pre-configured seed robots
+// Initial pre-configured seed robots (All idle standby at Fleet Staging Base on load)
 const INITIAL_ROBOTS: PlatformRobot[] = [
   {
     id: 'R0001',
-    name: 'AquaCollector-1',
-    role: 'WATER_COLLECTOR',
-    battery: 92,
+    name: 'Scout Drone R1',
+    labelCode: 'R1',
+    role: 'GENERAL',
+    battery: 94,
     health: 98,
-    speed: 3.8,
-    capacity: 100,
+    speed: 4.8,
+    capacity: 60,
     currentLoad: 0,
     state: 'IDLE',
-    x: 100,
-    y: 120,
+    x: 120,
+    y: 65,
+    radioRadius: 85,
+    assignedZoneId: null,
     workProgress: 0,
     workTimeRemaining: 0,
   },
   {
     id: 'R0002',
-    name: 'TerraPlanter-2',
-    role: 'PLANTER',
+    name: 'Hydro Harvester R2',
+    labelCode: 'R2',
+    role: 'WATER_COLLECTOR',
     battery: 88,
     health: 95,
-    speed: 3.2,
-    capacity: 80,
+    speed: 3.5,
+    capacity: 120,
     currentLoad: 0,
     state: 'IDLE',
-    x: 150,
-    y: 120,
+    x: 180,
+    y: 65,
+    radioRadius: 90,
+    assignedZoneId: null,
     workProgress: 0,
     workTimeRemaining: 0,
   },
   {
     id: 'R0003',
-    name: 'SwiftTrans-3',
-    role: 'TRANSPORTER',
-    battery: 100,
-    health: 100,
-    speed: 5.2,
-    capacity: 150,
+    name: 'Agri Cultivator R3',
+    labelCode: 'R3',
+    role: 'PLANTER',
+    battery: 86,
+    health: 92,
+    speed: 3.2,
+    capacity: 90,
     currentLoad: 0,
     state: 'IDLE',
-    x: 200,
-    y: 120,
+    x: 240,
+    y: 65,
+    radioRadius: 85,
+    assignedZoneId: null,
     workProgress: 0,
     workTimeRemaining: 0,
   },
   {
     id: 'R0004',
-    name: 'Sanitizer-4',
+    name: 'Mesh Relay Node R4',
+    labelCode: 'R4',
     role: 'CLEANER',
-    battery: 84,
-    health: 90,
-    speed: 4.0,
+    battery: 96,
+    health: 99,
+    speed: 4.2,
     capacity: 50,
     currentLoad: 0,
     state: 'IDLE',
-    x: 250,
-    y: 120,
+    x: 300,
+    y: 65,
+    radioRadius: 110,
+    assignedZoneId: null,
+    workProgress: 0,
+    workTimeRemaining: 0,
+  },
+  {
+    id: 'R0005',
+    name: 'Heavy Transporter R5',
+    labelCode: 'R5',
+    role: 'TRANSPORTER',
+    battery: 92,
+    health: 100,
+    speed: 5.2,
+    capacity: 160,
+    currentLoad: 0,
+    state: 'IDLE',
+    x: 360,
+    y: 65,
+    radioRadius: 80,
+    assignedZoneId: null,
     workProgress: 0,
     workTimeRemaining: 0,
   },
 ];
 
-// Initial pre-configured seed zones
+// Initial pre-configured seed zones with multi-resources (Purified Water, Mineral Ore, Power Cells, Bio-Nutrient)
 const INITIAL_ZONES: WorkZone[] = [
   {
     id: 'Z001',
-    name: 'Zone Alpha - Water Treatment',
-    x: 80,
-    y: 280,
+    name: 'Zone A · Water Synthesis',
+    x: 90,
+    y: 150,
     width: 280,
-    height: 220,
-    color: '#0284c7',
+    height: 210,
+    color: '#06b6d4',
     taskType: 'WATER_WASTE',
+    taskCode: '💧 T1',
     difficulty: 'MEDIUM',
-    timeLimitSeconds: 50,
-    timeRemainingSeconds: 50,
+    timeLimitSeconds: 90,
+    timeRemainingSeconds: 90,
     resourceProduced: { type: 'Purified Water', amount: 500 },
     currentResourceLevel: 0,
     status: 'UNASSIGNED',
@@ -103,17 +138,74 @@ const INITIAL_ZONES: WorkZone[] = [
   },
   {
     id: 'Z002',
-    name: 'Zone Beta - Arborist Field',
-    x: 580,
-    y: 380,
-    width: 320,
-    height: 240,
-    color: '#16a34a',
-    taskType: 'TREE_PLANTING',
+    name: 'Zone B · Mineral Ore Mining',
+    x: 420,
+    y: 190,
+    width: 280,
+    height: 210,
+    color: '#a855f7',
+    taskType: 'INSPECTION',
+    taskCode: '⛏️ T2',
     difficulty: 'HARD',
-    timeLimitSeconds: 70,
-    timeRemainingSeconds: 70,
+    hazardText: '!Hazard',
+    timeLimitSeconds: 100,
+    timeRemainingSeconds: 100,
+    resourceProduced: { type: 'Mineral Ore / Silicon', amount: 350 },
+    currentResourceLevel: 0,
+    status: 'UNASSIGNED',
+    assignedRobotId: null,
+  },
+  {
+    id: 'Z003',
+    name: 'Zone C · Agri Bio-Nutrient',
+    x: 740,
+    y: 440,
+    width: 280,
+    height: 210,
+    color: '#10b981',
+    taskType: 'TREE_PLANTING',
+    taskCode: '🌱 T3',
+    difficulty: 'HARD',
+    timeLimitSeconds: 120,
+    timeRemainingSeconds: 120,
     resourceRequired: { type: 'Purified Water', amount: 500 },
+    currentResourceLevel: 0,
+    status: 'UNASSIGNED',
+    assignedRobotId: null,
+  },
+  {
+    id: 'Z004',
+    name: 'Zone D · Power Cell Storage',
+    x: 480,
+    y: 720,
+    width: 290,
+    height: 200,
+    color: '#f59e0b',
+    taskType: 'CLEANING',
+    taskCode: '⚡ T4',
+    difficulty: 'MEDIUM',
+    timeLimitSeconds: 85,
+    timeRemainingSeconds: 85,
+    resourceProduced: { type: 'Charged Power Cells', amount: 150 },
+    currentResourceLevel: 0,
+    status: 'UNASSIGNED',
+    assignedRobotId: null,
+  },
+  {
+    id: 'Z005',
+    name: 'Zone E · Component Logistics',
+    x: 120,
+    y: 690,
+    width: 290,
+    height: 210,
+    color: '#ef4444',
+    taskType: 'DELIVERY',
+    taskCode: '📦 T5',
+    difficulty: 'MEDIUM',
+    hazardText: '!Debris',
+    timeLimitSeconds: 95,
+    timeRemainingSeconds: 95,
+    resourceRequired: { type: 'Mineral Ore / Silicon', amount: 200 },
     currentResourceLevel: 0,
     status: 'UNASSIGNED',
     assignedRobotId: null,
@@ -121,9 +213,7 @@ const INITIAL_ZONES: WorkZone[] = [
 ];
 
 export default function PlatformPage() {
-  const [operatorName, setOperatorName] = useState<string | null>(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(true);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [operatorName] = useState<string>('Commander');
   const [isCreateRobotOpen, setIsCreateRobotOpen] = useState(false);
   const [zoneDraft, setZoneDraft] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
@@ -131,7 +221,23 @@ export default function PlatformPage() {
   const [zones, setZones] = useState<WorkZone[]>(INITIAL_ZONES);
   const [selectedRobotId, setSelectedRobotId] = useState<string | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'MAP' | 'TOPOLOGY'>('MAP');
+  type RoveraTab = 'MISSION_CONTROL' | 'NETWORK_AI_COMMS' | 'CONFLICTS' | 'BATTERY_RTB' | 'RESILIENCE' | 'BENCHMARKS';
+  const [activeTab, setActiveTab] = useState<RoveraTab>('MISSION_CONTROL');
+  const [isAiAutoChatActive, setIsAiAutoChatActive] = useState(true);
+  const [controllerOnline, setControllerOnline] = useState(true);
+  const [layerMesh, setLayerMesh] = useState(true);
+  const [layerConflicts, setLayerConflicts] = useState(true);
+  const [layerChargers, setLayerChargers] = useState(true);
+  const [layerDeadlocks, setLayerDeadlocks] = useState(true);
+
+  // Live Deadlock Scenario State for Mission Control simulation
+  const [deadlockScenario, setDeadlockScenario] = useState<{
+    robotAId: string;
+    robotBId: string;
+    zoneName: string;
+    step: 'DETECTED' | 'RESOLVING' | 'RESOLVED';
+    wfgCycle?: string;
+  } | null>(null);
 
   const [coordinationAlert, setCoordinationAlert] = useState<CoordinationAlert | null>(null);
   const [lowBatteryAlert, setLowBatteryAlert] = useState<{ robot: PlatformRobot; zone: WorkZone } | null>(null);
@@ -155,12 +261,6 @@ export default function PlatformPage() {
     phase: 'PICKUP' | 'DELIVERY';
   } | null>(null);
 
-  // Authentication Completion
-  const handleLogin = (name: string) => {
-    setOperatorName(name);
-    setIsAuthOpen(false);
-    setIsOnboardingOpen(true); // Show onboarding mascot after login as required
-  };
 
   // Add Log Message Helper
   const addMessage = (from: string, to: string, content: string, badge: 'STATUS' | 'LOGISTICS' | 'CONFIRM' | 'ALERT' = 'LOGISTICS') => {
@@ -169,6 +269,176 @@ export default function PlatformPage() {
       ...prev,
       { id: 'm-' + Date.now() + Math.random(), timestamp: timeStr, fromRobot: from, toRobot: to, content, badge },
     ]);
+  };
+
+  // Deadlock Simulation Handler (Corridor Contention, Tarjan Cycle Detection, AI Lateral Detour Prevention)
+  const triggerDeadlockSimulation = (botAId = 'R0001', botBId = 'R0002') => {
+    setActiveTab('MISSION_CONTROL');
+
+    // Phase 1: Contending robots converge head-on into narrow corridor between Zone A & Zone B
+    setRobots(prev =>
+      prev.map(r => {
+        if (r.id === botAId) {
+          return { ...r, state: 'TRAVELLING', x: 330, y: 230, targetX: 430, targetY: 230, speed: 2.5 };
+        }
+        if (r.id === botBId) {
+          return { ...r, state: 'TRAVELLING', x: 590, y: 230, targetX: 490, targetY: 230, speed: 2.5 };
+        }
+        return r;
+      })
+    );
+
+    addMessage('Traffic Monitor', 'Fleet', '⚠️ CORRIDOR CONTENTION: Scout Drone R1 and Hydro Harvester R2 entering single-lane transit corridor simultaneously.', 'ALERT');
+
+    // Phase 2: Deadlock Detected (Circular Wait-For-Graph Cycle)
+    setTimeout(() => {
+      setRobots(prev =>
+        prev.map(r => {
+          if (r.id === botAId) {
+            return { ...r, state: 'IDLE', x: 430, y: 230, targetX: null, targetY: null };
+          }
+          if (r.id === botBId) {
+            return { ...r, state: 'IDLE', x: 490, y: 230, targetX: null, targetY: null };
+          }
+          return r;
+        })
+      );
+
+      setDeadlockScenario({
+        robotAId: botAId,
+        robotBId: botBId,
+        zoneName: 'Inter-Zone Corridor (Alpha ↔ Beta)',
+        step: 'DETECTED',
+        wfgCycle: 'Tarjan WFG Cycle: R1 (holds West-Access, waits for East) ⇄ R2 (holds East-Access, waits for West)',
+      });
+
+      addMessage('Tarjan WFG Engine', 'Fleet', '🚨 DEADLOCK DETECTED: Circular dependency cycle identified between R1 and R2. Corridor traffic frozen.', 'ALERT');
+    }, 1800);
+
+    // Phase 3: Resolving via AI Priority Arbitration & 90° Lateral Detour
+    setTimeout(() => {
+      setDeadlockScenario({
+        robotAId: botAId,
+        robotBId: botBId,
+        zoneName: 'Inter-Zone Corridor (Alpha ↔ Beta)',
+        step: 'RESOLVING',
+        wfgCycle: 'AI Priority Arbitration: R1 (Priority 1: Critical Recon) wins Right-of-Way. R2 (Priority 2) yields via 90° lateral detour into clearance pocket (490, 310).',
+      });
+
+      // Move R2 out of the corridor into the clearance pocket, and R1 proceeds forward
+      setRobots(prev =>
+        prev.map(r => {
+          if (r.id === botBId) {
+            return { ...r, state: 'TRAVELLING', targetX: 490, targetY: 310, speed: 3.2 };
+          }
+          if (r.id === botAId) {
+            return { ...r, state: 'TRAVELLING', targetX: 580, targetY: 230, speed: 3.6 };
+          }
+          return r;
+        })
+      );
+
+      addMessage('AI Deadlock Recovery', 'Fleet', '🛡️ AI RESOLUTION: Priority awarded to R1. R2 executing lateral clearance maneuver to pocket (x: 490, y: 310).', 'CONFIRM');
+    }, 4500);
+
+    // Phase 4: Resolved
+    setTimeout(() => {
+      setDeadlockScenario({
+        robotAId: botAId,
+        robotBId: botBId,
+        zoneName: 'Inter-Zone Corridor (Alpha ↔ Beta)',
+        step: 'RESOLVED',
+        wfgCycle: 'Deadlock Cleared: Wait-For Graph cycle dissolved. Zero packet loss, 100% spatial safety verified.',
+      });
+
+      // R2 resumes its trajectory back towards Zone A
+      setRobots(prev =>
+        prev.map(r => {
+          if (r.id === botBId) {
+            return { ...r, state: 'TRAVELLING', targetX: 230, targetY: 250, speed: 3.2 };
+          }
+          return r;
+        })
+      );
+
+      addMessage('System Core', 'Fleet', '✅ DEADLOCK RESOLVED: Corridor clear. Both agents successfully navigated without collision.', 'CONFIRM');
+    }, 7800);
+
+    // Phase 5: Clean up deadlock overlay
+    setTimeout(() => {
+      setDeadlockScenario(null);
+    }, 11000);
+  };
+
+  // Run Demo (Automated Process with Recommendations & Deadlock Simulation)
+  const handleRunDemo = () => {
+    setActiveTab('MISSION_CONTROL');
+    addMessage('Command', 'Fleet', '⚡ RUN DEMO INITIATED: Automated process dispatched with interactive recommendations.', 'STATUS');
+
+    // 1. Dispatch R1 to Zone A (Water Synthesis T1)
+    setTimeout(() => {
+      handleAssignRobotToZone('R0001', 'Z001');
+    }, 600);
+
+    // 2. Dispatch R2 to Zone B (Mineral Ore Mining T2)
+    setTimeout(() => {
+      handleAssignRobotToZone('R0002', 'Z002');
+    }, 1600);
+
+    // 3. Dispatch R3 to Zone C (Agri Bio-Nutrient T3)
+    setTimeout(() => {
+      handleAssignRobotToZone('R0003', 'Z003');
+    }, 2600);
+
+    // 4. Recommendation Modal: Multi-Robot Coordination Prompt
+    setTimeout(() => {
+      setCoordinationAlert({
+        id: 'coord-demo-1',
+        sourceRobotId: 'R0001',
+        sourceZoneId: 'Z001',
+        targetRobotId: 'R0003',
+        targetZoneId: 'Z003',
+        resourceType: 'Purified Water',
+        amount: 500,
+        message: 'Scout Drone R1 in Zone A has produced 500L Purified Water. Agri Cultivator R3 in Zone C requires water input for Bio-Nutrient cultivation. Recommend deploying Heavy Transporter R5 to bridge the resource pipeline?',
+        status: 'PENDING',
+      });
+      addMessage('AI Recommendation', 'Operator', '💡 RECOMMENDATION: Inter-zone dependency detected. Authorize Heavy Transporter R5 for water payload transfer?', 'LOGISTICS');
+    }, 4500);
+
+    // 5. Corridor Deadlock Simulation on Mission Control Canvas
+    setTimeout(() => {
+      triggerDeadlockSimulation('R0001', 'R0002');
+    }, 12000);
+
+    // 6. Battery Critical Intervention Recommendation
+    setTimeout(() => {
+      const botR3 = robots.find(r => r.id === 'R0003');
+      const zoneC = zones.find(z => z.id === 'Z003');
+      if (zoneC) {
+        setRobots(prev => prev.map(r => (r.id === 'R0003' ? { ...r, battery: 14, state: 'IDLE' } : r)));
+        setLowBatteryAlert({
+          robot: { ...(botR3 || INITIAL_ROBOTS[2]), battery: 14, state: 'IDLE' },
+          zone: zoneC,
+        });
+        addMessage('Telemetry', 'Agri Cultivator R3', '🔋 BATTERY INTERVENTION: R3 at 14% critical threshold. Recommend recalling to Charge Pad Alpha.', 'ALERT');
+      }
+    }, 24000);
+  };
+
+  // Inject Failure Suite
+  const handleInjectFailure = (type: 'MOTOR' | 'BATTERY' | 'COMMS', robotId?: string) => {
+    const target = robotId ? robots.find(r => r.id === robotId) : robots[0];
+    if (!target) return;
+    if (type === 'MOTOR') {
+      setRobots(prev => prev.map(r => r.id === target.id ? { ...r, state: 'FAILED', speed: 0 } : r));
+      addMessage('Telemetry', target.name, `💥 MOTOR ACTUATOR SEIZURE: Hardware fault on ${target.name}. Work migrating to peer.`, 'ALERT');
+    } else if (type === 'BATTERY') {
+      setRobots(prev => prev.map(r => r.id === target.id ? { ...r, battery: 12 } : r));
+      addMessage('Telemetry', target.name, `🔋 BATTERY CRITICAL: Voltage dropped to 12%. Emergency RTB initiated.`, 'ALERT');
+    } else if (type === 'COMMS') {
+      addMessage('Telemetry', target.name, `📡 RF COMMS JAMMING: 45% packet loss active. Falling back to gossip mesh.`, 'ALERT');
+    }
   };
 
   // Assign Robot to Zone (via Drag & Drop)
@@ -214,17 +484,17 @@ export default function PlatformPage() {
     addMessage(robot.name, 'Dispatch', `Dispatched to ${zone.name}. En route to target coordinates.`, 'STATUS');
   };
 
-  // Recall to Charging Station
+  // Recall to Charging Station (Charging Pad Alpha at top-right)
   const handleRecallToCharger = (robotId: string) => {
     setRobots(prev =>
       prev.map(r => {
         if (r.id === robotId) {
-          addMessage(r.name, 'Charging Station', 'Initiated return to Central Charging Bay.', 'STATUS');
+          addMessage(r.name, 'Charging Station', 'Initiated return to Central Charge Pad Alpha.', 'STATUS');
           return {
             ...r,
             state: 'TRAVELLING',
-            targetX: 900,
-            targetY: 80,
+            targetX: 995,
+            targetY: 75,
             assignedZoneId: null,
           };
         }
@@ -325,10 +595,10 @@ export default function PlatformPage() {
               updated.targetX = null;
               updated.targetY = null;
 
-              // Check if arrived at charging bay
-              if (updated.x >= 820 && updated.y <= 140) {
+              // Check if arrived at Central Charge Pad Alpha (top-right 995, 75)
+              if (Math.hypot(updated.x - 995, updated.y - 75) <= 65 || (updated.x >= 880 && updated.y <= 150)) {
                 updated.state = 'CHARGING';
-                addMessage(updated.name, 'Dispatch', 'Docked at Central Charging Bay. Recharging cells.', 'STATUS');
+                addMessage(updated.name, 'Dispatch', 'Docked at Central Charge Pad Alpha. Rapid battery cells recharging.', 'STATUS');
               } else if (updated.assignedZoneId) {
                 updated.state = 'WORKING';
                 addMessage(updated.name, 'Dispatch', 'Arrived at work zone. Initiating operations.', 'STATUS');
@@ -488,10 +758,38 @@ export default function PlatformPage() {
     return () => clearInterval(interval);
   }, [robots, zones, coordinationAlert, transferState, lowBatteryAlert]);
 
+  // 5. Autonomous AI Inter-Robot Cognitive Communication Loop
+  useEffect(() => {
+    if (!isAiAutoChatActive) return;
+    const aiInterval = setInterval(() => {
+      const aiResult = generateAutonomousAIDialogue(robots, zones);
+      if (aiResult) {
+        const badgeMap: Record<string, 'STATUS' | 'LOGISTICS' | 'CONFIRM' | 'ALERT'> = {
+          DIRECTIVE: 'STATUS',
+          NEGOTIATION: 'LOGISTICS',
+          LOGISTICS: 'LOGISTICS',
+          COLLISION_AVOIDANCE: 'ALERT',
+          ENERGY_HANDOVER: 'ALERT',
+          STATUS: 'CONFIRM',
+        };
+        addMessage(aiResult.from, aiResult.to, aiResult.message, badgeMap[aiResult.type] || 'LOGISTICS');
+      }
+    }, 5500);
+
+    return () => clearInterval(aiInterval);
+  }, [isAiAutoChatActive, robots, zones]);
+
   // Create new robot
   const handleCreateRobot = (newBot: PlatformRobot) => {
     setRobots(prev => [...prev, newBot]);
     addMessage('Dispatch', newBot.name, `Robot commissioned into fleet: Role ${newBot.role}, Capacity ${newBot.capacity}kg.`, 'STATUS');
+  };
+
+  // Delete robot from fleet
+  const handleDeleteRobot = (robotId: string) => {
+    const bot = robots.find(r => r.id === robotId);
+    setRobots(prev => prev.filter(r => r.id !== robotId));
+    if (bot) addMessage('Dispatch', 'Fleet', `Robot ${bot.name} decommissioned from fleet.`, 'STATUS');
   };
 
   // Create new zone
@@ -504,11 +802,6 @@ export default function PlatformPage() {
 
   return (
     <div style={{ padding: '0 24px 60px', maxWidth: 1700, margin: '0 auto' }}>
-      {/* Auth Modal */}
-      <AuthModal isOpen={isAuthOpen} onLogin={handleLogin} />
-
-      {/* Onboarding Mascot Modal */}
-      <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
 
       {/* Create Robot Modal */}
       <CreateRobotModal
@@ -547,146 +840,354 @@ export default function PlatformPage() {
         onDismiss={() => setLowBatteryAlert(null)}
       />
 
-      {/* Header Bar */}
+      {/* 0. TOP COMMAND BAR — Full-width sticky above navbar */}
       <div
         style={{
-          padding: '20px 0 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
-          marginBottom: 16,
+          position: 'sticky',
+          top: 0,
+          zIndex: 60,
+          margin: '0 -24px',
+          padding: '10px 24px',
+          background: 'rgba(8, 12, 20, 0.88)',
+          backdropFilter: 'blur(28px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.09)',
+          boxShadow: '0 2px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: 14,
           flexWrap: 'wrap',
-          gap: 12,
         }}
       >
+        {/* Left: Brand + Status */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#f8fafc' }}>
-              📍 Multi-Robot Zone Assignment & Coordination Platform
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 17, fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 6 }}>
+              CORE · Tactical Fleet Coordination
             </h1>
             <span
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 700,
-                padding: '3px 10px',
-                borderRadius: 100,
-                background: 'rgba(99, 102, 241, 0.15)',
-                color: '#818cf8',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
+                padding: '2px 10px',
+                borderRadius: 9999,
+                background: controllerOnline ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.2)',
+                color: controllerOnline ? '#4ade80' : '#f87171',
+                border: `1px solid ${controllerOnline ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.4)'}`,
               }}
             >
-              Enterprise Fleet Dashboard
+              {controllerOnline ? 'Central Controller ONLINE' : '100% P2P Mesh Mode'}
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                padding: '2px 10px',
+                borderRadius: 9999,
+                background: 'rgba(6, 182, 212, 0.12)',
+                color: '#38bdf8',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+              }}
+            >
+              Enterprise HaLow Mesh Core
             </span>
           </div>
-          <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
-            Draw work zones · Drag & drop robot vacuum-style dispatch · Automated producer-consumer dependency coordination
+          <p style={{ fontSize: 10.5, color: '#64748b', margin: '2px 0 0', lineHeight: 1.3 }}>
+            Coordination &amp; Optimization for Robotic Execution · Decentralized P2P Task Negotiation · Collision Detours &amp; Deadlock Recovery
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {/* Help mascot button */}
-          <button
-            onClick={() => setIsOnboardingOpen(true)}
-            className="btn btn-ghost"
-            style={{ width: 'auto', padding: '8px 14px', fontSize: 12 }}
+        {/* Right: Overlays + Actions */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Overlay pills */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 5,
+              alignItems: 'center',
+              padding: '4px 8px',
+              borderRadius: 9999,
+              background: 'rgba(0, 0, 0, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08)',
+            }}
           >
-            🤖 RoboGuide Instructions
-          </button>
-
-          {/* Toggle between Map View and Topology Network View */}
-          <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
-            <button
-              onClick={() => setActiveTab('MAP')}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                border: 'none',
-                background: activeTab === 'MAP' ? '#6366f1' : 'transparent',
-                color: activeTab === 'MAP' ? '#fff' : '#94a3b8',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              🗺️ Zone Canvas
-            </button>
-            <button
-              onClick={() => setActiveTab('TOPOLOGY')}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                border: 'none',
-                background: activeTab === 'TOPOLOGY' ? '#6366f1' : 'transparent',
-                color: activeTab === 'TOPOLOGY' ? '#fff' : '#94a3b8',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              🌐 Cisco Topology & Chat
-            </button>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 4px' }}>OVERLAYS</span>
+            {([
+              { key: 'mesh', label: 'Mesh', active: layerMesh, set: setLayerMesh, color: '#38bdf8' },
+              { key: 'conflicts', label: 'Conflicts', active: layerConflicts, set: setLayerConflicts, color: '#f87171' },
+              { key: 'bays', label: 'Bays', active: layerChargers, set: setLayerChargers, color: '#fbbf24' },
+              { key: 'deadlocks', label: 'Deadlocks', active: layerDeadlocks, set: setLayerDeadlocks, color: '#c084fc' },
+            ] as const).map(o => (
+              <button
+                key={o.key}
+                onClick={() => o.set((p: boolean) => !p)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '3px 10px',
+                  borderRadius: 9999,
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  background: o.active ? `rgba(${o.color === '#38bdf8' ? '56,189,248' : o.color === '#f87171' ? '239,68,68' : o.color === '#fbbf24' ? '245,158,11' : '168,85,247'}, 0.18)` : 'transparent',
+                  border: o.active ? `1px solid ${o.color}55` : '1px solid transparent',
+                  color: o.active ? o.color : '#64748b',
+                  boxShadow: o.active ? `inset 0 1px 1px rgba(255,255,255,0.35)` : 'none',
+                  transition: 'all 0.18s cubic-bezier(0.16,1,0.3,1)',
+                }}
+              >
+                <span style={{ fontSize: 7 }}>{o.active ? '●' : '○'}</span>
+                {o.label}
+              </button>
+            ))}
           </div>
 
-          {/* Link to 500+ Mesh Engine */}
-          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-            <button
-              className="btn btn-ghost"
-              style={{ width: 'auto', padding: '8px 16px', fontSize: 12, border: '1px solid #06b6d4', color: '#67e8f9' }}
-            >
-              ⚡ 500+ AMR Mesh Engine →
-            </button>
-          </Link>
+          {/* Run Demo */}
+          <button
+            onClick={handleRunDemo}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '7px 16px',
+              borderRadius: 9999,
+              fontSize: 11.5,
+              fontWeight: 800,
+              cursor: 'pointer',
+              background: 'linear-gradient(180deg, rgba(56,189,248,0.95) 0%, rgba(37,99,235,0.95) 100%)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              boxShadow: 'inset 0 1px 1.5px rgba(255,255,255,0.65), 0 4px 16px rgba(56,189,248,0.4)',
+              color: '#fff',
+              transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+            }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            ⚡ Run Demo
+          </button>
+
+          {/* Inject Deadlock */}
+          <button
+            onClick={() => triggerDeadlockSimulation('R0001', 'R0002')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '7px 14px',
+              borderRadius: 9999,
+              fontSize: 11.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: 'linear-gradient(180deg, rgba(239,68,68,0.92) 0%, rgba(185,28,28,0.92) 100%)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              boxShadow: 'inset 0 1px 1.5px rgba(255,255,255,0.55), 0 4px 16px rgba(239,68,68,0.35)',
+              color: '#fff',
+              transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+            }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            ⚠️ Inject Deadlock
+          </button>
         </div>
       </div>
+
+      {/* 1. Main Headings on Top - Apple-Inspired Glossy Glass Segmented Navigation */}
+      <div
+        style={{
+          marginTop: 10,
+          marginBottom: 16,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'sticky',
+          top: 62,
+          zIndex: 40,
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '5px',
+            borderRadius: 9999,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(28px) saturate(190%)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18)',
+            flexWrap: 'wrap',
+            gap: 4,
+            maxWidth: '100%',
+          }}
+        >
+          {[
+            { id: 'MISSION_CONTROL', label: 'Mission Control & Zones' },
+            { id: 'NETWORK_AI_COMMS', label: 'Cisco Topology & AI Communication' },
+            { id: 'CONFLICTS', label: 'Conflicts & Deadlocks' },
+            { id: 'BATTERY_RTB', label: 'Battery & Energy RTB' },
+            { id: 'RESILIENCE', label: 'Faults & Mesh Resilience' },
+            { id: 'BENCHMARKS', label: '500+ Swarm Benchmarks' },
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as RoveraTab)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 9999,
+                  border: isActive ? '1px solid rgba(255, 255, 255, 0.28)' : '1px solid transparent',
+                  background: isActive
+                    ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.95), rgba(37, 99, 235, 0.95))'
+                    : 'transparent',
+                  color: isActive ? '#ffffff' : '#94a3b8',
+                  fontSize: 12.5,
+                  fontWeight: isActive ? 800 : 600,
+                  letterSpacing: '0.01em',
+                  cursor: 'pointer',
+                  boxShadow: isActive
+                    ? '0 4px 18px rgba(56, 189, 248, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5)'
+                    : 'none',
+                  transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+                  outline: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#f1f5f9';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#94a3b8';
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+                onMouseDown={e => {
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                }}
+                onMouseUp={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
 
       {/* Fleet Overview KPIs */}
       <FleetOverviewBar robots={robots} zones={zones} operatorName={operatorName || 'Commander'} />
 
-      {/* Main Content Area */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, marginTop: 18 }}>
-        {/* Left: Map Canvas OR Topology View */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {activeTab === 'MAP' ? (
-            <div className="glass" style={{ padding: 18 }}>
-              <ZoneCanvas
+      {/* Tab Content Display */}
+      <div style={{ marginTop: 18 }}>
+        {/* Tab 1: Mission Control (Interactive Zone Plotting, Drag & Drop, Vacuum Cleaner Travel, Fleet Sidebar) */}
+        {activeTab === 'MISSION_CONTROL' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
+            {/* Left: Map Canvas, AI Communications & Topology */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="glass" style={{ padding: 18 }}>
+                <ZoneCanvas
+                  robots={robots}
+                  zones={zones}
+                  messages={messages}
+                  onZoneCreated={setZoneDraft}
+                  onUpdateZone={handleUpdateZone}
+                  onDeleteZone={handleDeleteZone}
+                  onDeselectAll={() => {
+                    setSelectedZoneId(null);
+                    setSelectedRobotId(null);
+                  }}
+                  onAssignRobotToZone={handleAssignRobotToZone}
+                  onRecallToCharger={handleRecallToCharger}
+                  onSelectRobot={r => setSelectedRobotId(r.id)}
+                  onSelectZone={z => setSelectedZoneId(z.id)}
+                  selectedRobotId={selectedRobotId}
+                  selectedZoneId={selectedZoneId}
+                  activeCoordinationTransfer={transferState}
+                  deadlockScenario={deadlockScenario}
+                />
+              </div>
+
+              {/* Live AI Inter-Robot Communication & Directive Console */}
+              <AICommunicationPanel
                 robots={robots}
                 zones={zones}
-                onZoneCreated={setZoneDraft}
-                onUpdateZone={handleUpdateZone}
-                onDeleteZone={handleDeleteZone}
-                onDeselectAll={() => {
-                  setSelectedZoneId(null);
-                  setSelectedRobotId(null);
-                }}
-                onAssignRobotToZone={handleAssignRobotToZone}
+                messages={messages}
+                onSendMessage={({ from, to, content, badge }) => addMessage(from, to, content, badge)}
+                isAiAutoChatActive={isAiAutoChatActive}
+                onToggleAiAutoChat={() => setIsAiAutoChatActive(prev => !prev)}
+              />
+
+              {/* Secondary View: Live Cisco Network Topology below Canvas */}
+              <TopologyNetworkView robots={robots} zones={zones} messages={messages} />
+            </div>
+
+
+            {/* Right: Fleet Sidebar */}
+            <div className="glass" style={{ padding: 18, height: 'fit-content' }}>
+              <FleetSidebar
+                robots={robots}
+                onOpenCreateModal={() => setIsCreateRobotOpen(true)}
+                onRecallToCharger={handleRecallToCharger}
+                onDeleteRobot={handleDeleteRobot}
                 onSelectRobot={r => setSelectedRobotId(r.id)}
-                onSelectZone={z => setSelectedZoneId(z.id)}
                 selectedRobotId={selectedRobotId}
-                selectedZoneId={selectedZoneId}
-                activeCoordinationTransfer={transferState}
               />
             </div>
-          ) : (
-            <TopologyNetworkView robots={robots} zones={zones} messages={messages} />
-          )}
+          </div>
+        )}
 
-          {/* Secondary View: Live Inter-Robot Comms below Canvas when on Map Tab */}
-          {activeTab === 'MAP' && (
+        {/* Tab 2: Unified Cisco Network Topology & AI Inter-Robot Communication Hub */}
+        {activeTab === 'NETWORK_AI_COMMS' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <TopologyNetworkView robots={robots} zones={zones} messages={messages} />
-          )}
-        </div>
+            <AICommunicationPanel
+              robots={robots}
+              zones={zones}
+              messages={messages}
+              onSendMessage={({ from, to, content, badge }) => addMessage(from, to, content, badge)}
+              isAiAutoChatActive={isAiAutoChatActive}
+              onToggleAiAutoChat={() => setIsAiAutoChatActive(prev => !prev)}
+            />
+          </div>
+        )}
 
-        {/* Right: Fleet Sidebar */}
-        <div className="glass" style={{ padding: 18, height: 'fit-content' }}>
-          <FleetSidebar
+        {/* Tab 3: Conflicts & Deadlocks */}
+        {activeTab === 'CONFLICTS' && (
+          <RoveraConflictsView robots={robots} zones={zones} />
+        )}
+
+        {/* Tab 4: Battery & RTB */}
+        {activeTab === 'BATTERY_RTB' && (
+          <RoveraEnergyView robots={robots} zones={zones} onRecallToCharger={handleRecallToCharger} />
+        )}
+
+        {/* Tab 5: Faults & Mesh Resilience */}
+        {activeTab === 'RESILIENCE' && (
+          <RoveraResilienceView
             robots={robots}
-            onOpenCreateModal={() => setIsCreateRobotOpen(true)}
-            onRecallToCharger={handleRecallToCharger}
-            onSelectRobot={r => setSelectedRobotId(r.id)}
-            selectedRobotId={selectedRobotId}
+            zones={zones}
+            controllerOnline={controllerOnline}
+            onToggleController={() => {
+              setControllerOnline(prev => !prev);
+              addMessage(
+                'System Core',
+                'Fleet',
+                controllerOnline
+                  ? '⚡ CENTRAL CONTROLLER TERMINATED. Ad-hoc P2P gossip mesh protocol activated.'
+                  : '🔄 CENTRAL CONTROLLER RESTORED. Telemetry synchronized.',
+                'ALERT'
+              );
+            }}
+            onInjectFailure={handleInjectFailure}
           />
-        </div>
+        )}
+
+        {/* Tab 6: 500+ Swarm Benchmarks */}
+        {activeTab === 'BENCHMARKS' && (
+          <RoveraSwarmBenchmarkView />
+        )}
       </div>
     </div>
   );

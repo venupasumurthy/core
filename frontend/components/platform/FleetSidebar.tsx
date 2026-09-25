@@ -7,6 +7,7 @@ interface Props {
   onOpenCreateModal: () => void;
   onRecallToCharger: (robotId: string) => void;
   onSelectRobot: (robot: PlatformRobot) => void;
+  onDeleteRobot?: (robotId: string) => void;
   selectedRobotId?: string | null;
 }
 
@@ -14,9 +15,9 @@ const ROLE_ICONS: Record<string, string> = {
   WATER_COLLECTOR: '💧',
   PLANTER: '🌱',
   TRANSPORTER: '🚚',
-  CLEANER: '🧹',
+  CLEANER: '📶',
   HEAVY_LIFTER: '🏗️',
-  GENERAL: '🤖',
+  GENERAL: '✈',
 };
 
 const STATE_BADGES: Record<RobotPlatformState, { label: string; color: string; bg: string }> = {
@@ -33,6 +34,7 @@ export default function FleetSidebar({
   onOpenCreateModal,
   onRecallToCharger,
   onSelectRobot,
+  onDeleteRobot,
   selectedRobotId,
 }: Props) {
   const [filter, setFilter] = useState<'ALL' | 'IDLE' | 'WORKING' | 'CHARGING'>('ALL');
@@ -55,10 +57,10 @@ export default function FleetSidebar({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h3 style={{ fontSize: 15, fontWeight: 800, color: '#f8fafc' }}>
-            🤖 Robot Fleet ({robots.length})
+            Fleet Units ({robots.length})
           </h3>
           <p style={{ fontSize: 11, color: '#64748b' }}>
-            Drag robot onto map zone to assign
+            Drag to Zone to assign · Drag to Pad Alpha to dock
           </p>
         </div>
         <button
@@ -70,21 +72,25 @@ export default function FleetSidebar({
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+      {/* Filter Tabs (Apple Glossy Segmented Controls) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5, background: 'rgba(0, 0, 0, 0.25)', padding: 3, borderRadius: 9999, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
         {(['ALL', 'IDLE', 'WORKING', 'CHARGING'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
             style={{
               padding: '6px 4px',
-              borderRadius: 6,
-              background: filter === tab ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.03)',
-              border: `1px solid ${filter === tab ? '#6366f1' : 'transparent'}`,
-              color: filter === tab ? '#c7d2fe' : '#64748b',
+              borderRadius: 9999,
+              background: filter === tab
+                ? 'linear-gradient(180deg, rgba(56, 189, 248, 0.35) 0%, rgba(37, 99, 235, 0.25) 100%)'
+                : 'transparent',
+              border: filter === tab ? '1px solid rgba(56, 189, 248, 0.65)' : '1px solid transparent',
+              boxShadow: filter === tab ? 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(56, 189, 248, 0.25)' : 'none',
+              color: filter === tab ? '#ffffff' : '#94a3b8',
               fontSize: 10,
               fontWeight: 700,
               cursor: 'pointer',
+              transition: 'all 0.2s',
             }}
           >
             {tab}
@@ -117,7 +123,7 @@ export default function FleetSidebar({
             return (
               <div
                 key={r.id}
-                draggable={r.state === 'IDLE'}
+                draggable={r.state !== 'CHARGING'}
                 onDragStart={e => handleDragStart(e, r.id)}
                 onClick={() => onSelectRobot(r)}
                 className="glass"
@@ -132,49 +138,86 @@ export default function FleetSidebar({
                   background: isSelected
                     ? 'rgba(56, 189, 248, 0.08)'
                     : 'rgba(255, 255, 255, 0.03)',
-                  cursor: r.state === 'IDLE' ? 'grab' : 'pointer',
+                  cursor: r.state !== 'CHARGING' ? 'grab' : 'pointer',
                   transition: 'all 0.15s ease',
                   position: 'relative',
                 }}
               >
-                {/* Drag Handle Indicator for Idle Robots */}
-                {r.state === 'IDLE' && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      fontSize: 10,
-                      color: '#6366f1',
-                      background: 'rgba(99, 102, 241, 0.15)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ⋮⋮ DRAG ME
+                {/* Card Sub-Header with ID, Drag Indicator, and Delete */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700, fontFamily: 'monospace' }}>
+                    {r.id}
                   </span>
-                )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {r.state !== 'CHARGING' && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          color: '#38bdf8',
+                          background: 'rgba(56, 189, 248, 0.12)',
+                          padding: '1.5px 6px',
+                          borderRadius: 4,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ⋮⋮ DRAG
+                      </span>
+                    )}
+                    {onDeleteRobot && r.state === 'IDLE' && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (confirm(`Remove ${r.name} from fleet?`)) onDeleteRobot(r.id);
+                        }}
+                        title="Remove robot from fleet"
+                        style={{
+                          background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.18) 100%)',
+                          border: '1px solid rgba(239, 68, 68, 0.45)',
+                          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.3)',
+                          color: '#f87171',
+                          width: 20,
+                          height: 20,
+                          borderRadius: 9999,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <div
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       borderRadius: 8,
                       background: 'rgba(255, 255, 255, 0.06)',
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 16,
+                      fontSize: 14,
                       flexShrink: 0,
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                     }}
                   >
-                    {ROLE_ICONS[r.role] ?? '🤖'}
+                    <span>{ROLE_ICONS[r.role] ?? '🤖'}</span>
+                    <span style={{ fontSize: 8.5, fontWeight: 800, color: '#38bdf8', marginTop: -2 }}>
+                      {r.labelCode || r.id.replace('R000', 'R')}
+                    </span>
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.name}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
@@ -258,24 +301,29 @@ export default function FleetSidebar({
                     Load: <b style={{ color: '#cbd5e1' }}>{r.currentLoad}/{r.capacity}</b>
                   </span>
 
-                  {r.battery < 40 && r.state !== 'CHARGING' && (
+                  {r.state !== 'CHARGING' && (
                     <button
                       onClick={e => {
                         e.stopPropagation();
                         onRecallToCharger(r.id);
                       }}
+                      title="Recall to Charge Pad Alpha"
                       style={{
-                        background: 'rgba(245, 158, 11, 0.15)',
-                        border: '1px solid rgba(245, 158, 11, 0.35)',
-                        color: '#f59e0b',
-                        padding: '2px 8px',
-                        borderRadius: 4,
-                        fontSize: 10,
+                        background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%)',
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(245, 158, 11, 0.2)',
+                        color: '#fbbf24',
+                        padding: '4px 10px',
+                        borderRadius: 9999,
+                        fontSize: 10.5,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
                       }}
                     >
-                      ⚡ Charge
+                      ⚡ Dock Pad Alpha
                     </button>
                   )}
                 </div>

@@ -121,7 +121,7 @@ export default function OnboardingModal({ isOpen, onClose }: Props) {
               <span>RoboGuide Mascot Assistant</span>
             </div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f8fafc', marginTop: 2 }}>
-              Welcome to Fleet Operations!
+              Welcome to CORE Fleet Operations!
             </h2>
             <p style={{ fontSize: 13, color: '#94a3b8' }}>
               Step {currentStep + 1} of {STEPS.length}: {current.title}

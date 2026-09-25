@@ -31,6 +31,8 @@ export interface PlatformRobot {
   assignedZoneId?: string | null;
   workProgress: number;  // 0 - 100 %
   workTimeRemaining: number; // in seconds
+  labelCode?: string;
+  radioRadius?: number;
 }
 
 export type ZoneTaskType =
@@ -65,6 +67,8 @@ export interface WorkZone {
   status: ZoneStatus;
   assignedRobotId: string | null;
   transportRobotId?: string | null;
+  taskCode?: string;
+  hazardText?: string;
 }
 
 export interface CoordinationAlert {

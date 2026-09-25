@@ -77,38 +77,33 @@ export default function HomePage() {
         <div style={{ position: 'absolute', bottom: '10%', right: '8%', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle,rgba(168,85,247,0.08) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
         {/* Badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 100, padding: '6px 18px', marginBottom: 36 }}>
-          <span className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', display: 'inline-block' }} />
-          <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 600 }}>HackFusion 2026 · IEEE Robotics & Automation Society</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 100, padding: '6px 18px', marginBottom: 36 }}>
+          <span className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#38bdf8', display: 'inline-block' }} />
+          <span style={{ fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>CORE · Coordination & Optimization for Robotic Execution</span>
         </div>
 
         <h1 style={{ fontSize: 'clamp(36px,7vw,78px)', fontWeight: 800, lineHeight: 1.1, marginBottom: 28, maxWidth: 920 }}>
-          <span className="gradient-text">Decentralized Intelligence</span><br />
-          <span style={{ color: '#e2e8f0' }}>for 500+ Autonomous Robots</span>
+          <span className="gradient-text">CORE Decentralized Fleet Engine</span><br />
+          <span style={{ color: '#e2e8f0' }}>for 500+ Autonomous Mobile Robots</span>
         </h1>
 
         <p style={{ fontSize: 'clamp(14px,1.8vw,19px)', color: '#94a3b8', maxWidth: 660, lineHeight: 1.8, marginBottom: 52 }}>
-          A peer-to-peer multi-robot coordination engine with ML-powered task auctions,
-          collision avoidance, deadlock recovery, and battery-aware routing —
-          all without a single point of decision-making.
+          Decentralized Contract Net task allocation, spatial conflict prediction & detour routes,
+          Wait-For Graph deadlock recovery, and multi-robot zone assignment coordination —
+          all operating with zero central single-point-of-failure.
         </p>
 
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Link href="/platform" style={{ textDecoration: 'none' }}>
             <button className="btn btn-primary" style={{ padding: '14px 34px', fontSize: 15, borderRadius: 12, width: 'auto', background: 'linear-gradient(135deg,#06b6d4,#3b82f6)' }}>
-              📍 Launch Zone Coordination Platform
+              Launch Tactical Command Center
             </button>
           </Link>
           <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-            <button className="btn" style={{ padding: '14px 34px', fontSize: 15, borderRadius: 12, width: 'auto', background: 'rgba(99,102,241,0.2)', border: '1px solid #6366f1', color: '#c7d2fe' }}>
-              ⚡ 500+ Mesh Engine Dashboard
+            <button className="btn" style={{ padding: '14px 34px', fontSize: 15, borderRadius: 12, width: 'auto', background: 'rgba(56,189,248,0.15)', border: '1px solid #38bdf8', color: '#bae6fd' }}>
+              500+ AMR Mesh Engine
             </button>
           </Link>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-ghost" style={{ padding: '14px 28px', fontSize: 15, borderRadius: 12, width: 'auto' }}>
-              ⭐ GitHub
-            </button>
-          </a>
         </div>
       </section>
 
@@ -190,14 +185,14 @@ export default function HomePage() {
           </p>
           <Link href="/dashboard" style={{ textDecoration: 'none' }}>
             <button className="btn btn-primary" style={{ padding: '15px 44px', fontSize: 16, borderRadius: 14, width: 'auto' }}>
-              🤖 Open Live Dashboard
+              Open Live Dashboard
             </button>
           </Link>
         </div>
       </section>
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '28px 24px', textAlign: 'center', color: '#374151', fontSize: 13 }}>
-        <div style={{ marginBottom: 6 }}>HackFusion 2026 · IEEE Robotics & Automation Society</div>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '28px 24px', textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+        <div style={{ marginBottom: 6 }}>CORE · Coordination & Optimization for Robotic Execution</div>
         <div>FastAPI + Next.js · Decentralized by design</div>
       </footer>
     </div>
