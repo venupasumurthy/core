@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const LINKS = [
-  { href: '/',          label: 'Home'         },
-  { href: '/dashboard', label: '🤖 Dashboard' },
+  { href: '/',          label: 'Home' },
+  { href: '/platform',  label: '📍 Zone Coordination' },
+  { href: '/dashboard', label: '⚡ 500+ Mesh Engine' },
 ];
 
 export default function Navbar() {

@@ -94,14 +94,19 @@ export default function HomePage() {
         </p>
 
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link href="/platform" style={{ textDecoration: 'none' }}>
+            <button className="btn btn-primary" style={{ padding: '14px 34px', fontSize: 15, borderRadius: 12, width: 'auto', background: 'linear-gradient(135deg,#06b6d4,#3b82f6)' }}>
+              📍 Launch Zone Coordination Platform
+            </button>
+          </Link>
           <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-primary" style={{ padding: '14px 36px', fontSize: 15, borderRadius: 12, width: 'auto' }}>
-              🚀 Launch Live Dashboard
+            <button className="btn" style={{ padding: '14px 34px', fontSize: 15, borderRadius: 12, width: 'auto', background: 'rgba(99,102,241,0.2)', border: '1px solid #6366f1', color: '#c7d2fe' }}>
+              ⚡ 500+ Mesh Engine Dashboard
             </button>
           </Link>
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-ghost" style={{ padding: '14px 36px', fontSize: 15, borderRadius: 12, width: 'auto' }}>
-              ⭐ View on GitHub
+            <button className="btn btn-ghost" style={{ padding: '14px 28px', fontSize: 15, borderRadius: 12, width: 'auto' }}>
+              ⭐ GitHub
             </button>
           </a>
         </div>
