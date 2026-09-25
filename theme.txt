@@ -1,0 +1,88 @@
+Theme 1: Multi-Robot Task Negotiation Engine
+Problem Statement:
+Develop a decentralized coordination and mission-management platform capable of orchestrating 500+ heterogeneous autonomous
+mobile robots in a high-density industrial environment without depending on a continuously available central controller. The system must
+enable robots to reason about task ownership, negotiate shared resources, resolve right-of-way conflicts, predict collisions, detect
+deadlocks, and dynamically reassign work as battery levels, priorities, workloads, and robot health change. The solution should
+demonstrate resilient multi-agent decision-making under incomplete information and continue operating safely when individual robots or
+the central coordination service fail.
+Key Functionalities:
+•
+Multi-Agent Task Allocation: Assign and rebalance tasks using robot capability, location, workload, battery level, priority, and estimated
+completion time.
+•
+Peer-to-Peer Negotiation: Allow robots to negotiate task ownership, shared resources, and movement priorities without a single point of
+decision-making.
+•
+Conflict & Collision Management: Predict spatial conflicts, resolve right-of-way situations, and generate safe alternative trajectories.
+•
+Deadlock Detection & Recovery: Identify cyclic waiting conditions and automatically recover through replanning, priority changes, or task
+migration.
+•
+Battery-Aware Scheduling: Reassign missions when energy constraints threaten completion and optimize charging or return-to-base
+decisions.
+•
+Fleet Monitoring: Provide a live simulation dashboard showing robot states, task queues, routes, conflicts, failures, and system-level
+performance.
+Advanced Requirements:
+•
+Continue mission execution when the central controller becomes unavailable.
+•
+Scale the simulation from small fleets to 500+ robots and large task queues.
+•
+Make decisions using partial, delayed, or conflicting information.
+•
+Inject robot failures and communication loss and demonstrate graceful recovery.
+Deliverables:
+•
+Working software prototype/simulation demonstrating coordination of multiple heterogeneous robots.
+•
+Multi-agent task allocation and peer-to-peer negotiation module.
+•
+Collision prediction, right-of-way resolution, and deadlock detection/recovery module.
+•
+Battery-aware task reassignment and dynamic route-replanning module.
+•
+Failure-injection demonstration showing recovery from robot/controller failures.
+•
+Live dashboard showing robot states, tasks, routes, conflicts, failures, and mission performance.
+•
+Source code repository with setup/run instructions and a concise architecture document.
+•
+Demonstration results showing scalability toward 500+ simulated robots.
+Mandatory Deployment & GitHub Requirements:
+•
+The complete application must be deployed and accessible through a working deployment URL.
+•
+The complete source code must be pushed to a public GitHub repository before final evaluation.
+•
+The GitHub repository must contain a README with project overview, architecture, setup instructions, deployment URL, and team/member
+details.
+•
+The deployed version must match the submitted GitHub source code and be functional during evaluation.
+•
+Teams must ensure that the deployed application can be demonstrated by the jury without requiring local setup.
+Presentation & Evaluation Requirement:
+Every team must be prepared to present and demonstrate their solution to the evaluators if requested. The team must be able to explain
+the problem approach, system architecture, key implementation decisions, working features, deployment, and results during evaluation.
+Recommended Technologies:
+Multi-Agent Reinforcement Learning • Game Theory • Consensus Algorithms • Auction-Based Allocation • Distributed Optimization •
+Conflict-Based Search
+HACKFUSION 2026
+PROBLEM STATEMENTS
+HackFusion 2026 • IEEE Robotics & Automation Society Page 2
+Judging Criteria:
+•
+Distributed task allocation and negotiation effectiveness
+•
+Collision/deadlock detection and recovery accuracy
+•
+Route efficiency and resource utilization
+•
+Scalability and computational efficiency
+•
+Robustness to robot/controller failures
+•
+Innovation in decentralized coordination
+•
+Additional features may increase the effectiveness, usability, robustness, or overall impact of the application.
