@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   PlatformRobot,
   WorkZone,
@@ -20,7 +20,6 @@ import RoveraResilienceView from '@/components/platform/RoveraResilienceView';
 import RoveraSwarmBenchmarkView from '@/components/platform/RoveraSwarmBenchmarkView';
 import AICommunicationPanel from '@/components/platform/AICommunicationPanel';
 import { generateAutonomousAIDialogue } from '@/lib/aiFleetAgent';
-import Link from 'next/link';
 
 // Initial pre-configured seed robots (All idle standby at Fleet Staging Base on load)
 const INITIAL_ROBOTS: PlatformRobot[] = [
@@ -580,7 +579,7 @@ export default function PlatformPage() {
       // 1. Update Robots Physics & Travel
       setRobots(prevRobots => {
         return prevRobots.map(robot => {
-          let updated = { ...robot };
+          const updated = { ...robot };
 
           // Movement toward target (Vacuum Model - physical steps)
           if (updated.state === 'TRAVELLING' && updated.targetX != null && updated.targetY != null) {

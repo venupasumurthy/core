@@ -97,10 +97,9 @@ export default function TopologyNetworkView({ robots, zones, messages }: Props) 
   // Continuous high-FPS animation loop for live Cisco graph
   useEffect(() => {
     let animId: number;
-    let packetTimer: NodeJS.Timeout;
 
     // Increment packet counter naturally
-    packetTimer = setInterval(() => {
+    const packetTimer = setInterval(() => {
       setTotalPackets(prev => prev + Math.floor(Math.random() * 8 + 4));
     }, 400);
 
@@ -668,7 +667,7 @@ export default function TopologyNetworkView({ robots, zones, messages }: Props) 
                   <span style={{ fontSize: 10, color: '#64748b', fontFamily: 'monospace' }}>{m.timestamp}</span>
                 </div>
                 <div style={{ color: '#cbd5e1', lineHeight: 1.45, fontStyle: 'italic', fontSize: 11.5 }}>
-                  "{m.content}"
+                  &ldquo;{m.content}&rdquo;
                 </div>
               </div>
             ))
