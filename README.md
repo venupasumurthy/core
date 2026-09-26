@@ -1,13 +1,13 @@
 # CORE — Decentralized Multi-Robot Coordination & Swarm Intelligence
 
 <div align="center">
+  
+🌐 *Live Project:* [CORE - Coordination & Optimization for Robotic Exection](https://main.d1a3hk8x2zl4bw.amplifyapp.com/)  
 
-![Next.js 16](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white)
-![Firebase Firestore](https://img.shields.io/badge/Firebase-Firestore-FFA611?style=for-the-badge&logo=firebase&logoColor=black)
-![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Swarm Scale](https://img.shields.io/badge/Swarm_Scale-500%2B_Robots-purple?style=for-the-badge)
+[![Static Badge](https://img.shields.io/badge/Project-CORE-blue?style=flat-square&logo=github)](https://core-6gz5.onrender.com/)
+[![Static Badge](https://img.shields.io/badge/Status-Active-success?style=flat-square)](https://core-6gz5.onrender.com/platform)
+[![Static Badge](https://img.shields.io/badge/Version-1.2.0-orange?style=flat-square)](https://core-6gz5.onrender.com/platform)
+
 
 **A high-density autonomous multi-agent coordination platform engineered for real-time warehouse logistics, dynamic task allocation, conflict-free path planning, and decentralized mesh resilience.**
 
@@ -202,55 +202,6 @@ Hackfusion 2026/
 └── README.md                          # Platform documentation & technical specification
 ```
 
----
-
-## 🔥 Firebase Firestore Cloud Backend
-
-CORE leverages Firebase Firestore for real-time cloud persistence, providing low-latency distributed state across multiple operators.
-
-### 1. Security Rules (`firestore.rules`)
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-### 2. Environment Variables (`.env.local`)
-Create a `.env.local` file in the root directory (and configure in your hosting environment):
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDemoKeyForHackfusion2026Preview
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=core-fleet-ops.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=core-fleet-ops
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=core-fleet-ops.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=109283746501
-NEXT_PUBLIC_FIREBASE_APP_ID=1:109283746501:web:9c8d7e6f5a4b3c2d1e0f
-```
-> *Note: If credentials are not supplied, CORE automatically initializes in high-fidelity mock fallback mode with 0 runtime errors.*
-
----
-
-## 📡 REST API Endpoints
-
-CORE includes built-in serverless route handlers running on Next.js:
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/health` | `GET` | Health check, Firebase Firestore connectivity, latency, and collection status |
-| `/api/robots` | `GET` | List all robots from Firebase Firestore |
-| `/api/robots` | `POST` | Upsert (create or update) a robot in the cloud database |
-| `/api/robots?id=R0001` | `DELETE` | Decommission / delete a robot from Firestore |
-| `/api/zones` | `GET` | List all work zones from Firebase Firestore |
-| `/api/zones` | `POST` | Upsert (create or update) a work zone in Firestore |
-| `/api/zones?id=Z0001` | `DELETE` | Delete a work zone from Firestore |
-| `/api/sync` | `POST` | Bulk push complete fleet and zone state to Firestore |
-
----
-
 ## 🧑‍💻 Developed By
 
 ### Ensemble 4
@@ -273,52 +224,7 @@ CORE includes built-in serverless route handlers running on Next.js:
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-* **Node.js**: `v18.17.0` or later
-* **npm**: `v9.0.0` or later
-
-### Installation & Execution
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/venupasumurthy/core.git
-cd core
-
-# 2. Install dependencies
-npm install
-
-# 3. Launch local development server
-npm run dev
-```
-
-Open [http://localhost:3000/platform](http://localhost:3000/platform) in your browser to launch the Tactical Command Center.
-
-### Production Build & Linting
-
-```bash
-# Check TypeScript and build production bundle
-npm run build
-
-# Start production server
-npm run start
-```
-
----
-
-## ☁️ Deploying to Vercel
-
-1. Push your repository to GitHub:
-   ```bash
-   git push origin main
-   ```
-2. Import the repository at [vercel.com/new](https://vercel.com/new).
-3. The framework preset is automatically detected as **Next.js**.
-4. Configure the environment variables (`NEXT_PUBLIC_FIREBASE_*`) in **Settings → Environment Variables**.
-5. Click **Deploy**.
-
----
+Open [https://core-6gz5.onrender.com/](https://core-6gz5.onrender.com/platform) in your browser to launch the Tactical Command Center.
 
 ## 📄 License
 
