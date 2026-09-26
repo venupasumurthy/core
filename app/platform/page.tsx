@@ -21,7 +21,7 @@ import RoveraSwarmBenchmarkView from '@/components/platform/RoveraSwarmBenchmark
 import AICommunicationPanel from '@/components/platform/AICommunicationPanel';
 import { generateAutonomousAIDialogue } from '@/lib/aiFleetAgent';
 import {
-  checkSupabaseHealth,
+  checkFirebaseHealth,
   fetchRobots as fetchCloudRobots,
   fetchZones as fetchCloudZones,
   upsertRobot as upsertCloudRobot,
@@ -31,7 +31,7 @@ import {
   logMessage as logCloudMessage,
   bulkSyncFleet,
   subscribeToFleet,
-} from '@/lib/supabaseBackend';
+} from '@/lib/firebaseBackend';
 
 // Initial pre-configured seed robots (All idle standby at Fleet Staging Base on load)
 const INITIAL_ROBOTS: PlatformRobot[] = [
@@ -273,8 +273,8 @@ export default function PlatformPage() {
   } | null>(null);
 
 
-  // Supabase Cloud State
-  const [supabaseStatus, setSupabaseStatus] = useState<{
+  // Firebase Firestore Cloud State
+  const [firebaseStatus, setFirebaseStatus] = useState<{
     connected: boolean;
     tablesReady: boolean;
     message: string;
@@ -282,25 +282,25 @@ export default function PlatformPage() {
   }>({
     connected: false,
     tablesReady: false,
-    message: 'Connecting to Supabase Cloud...',
+    message: 'Connecting to Firebase Firestore...',
     isSyncing: false,
   });
 
-  // Supabase Initial Connect & Cloud State Sync
+  // Firebase Initial Connect & Cloud State Sync
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
 
-    async function initSupabase() {
+    async function initFirebase() {
       try {
-        const health = await checkSupabaseHealth();
-        setSupabaseStatus(prev => ({
+        const health = await checkFirebaseHealth();
+        setFirebaseStatus(prev => ({
           ...prev,
           connected: health.connected,
           tablesReady: health.tablesReady,
           message: health.message,
         }));
 
-        if (health.connected && health.tablesReady) {
+        if (health.connected) {
           const [{ data: cloudRobots }, { data: cloudZones }] = await Promise.all([
             fetchCloudRobots(),
             fetchCloudZones(),
@@ -316,7 +316,7 @@ export default function PlatformPage() {
             setZones(cloudZones);
           }
 
-          // Realtime multi-client subscription
+          // Realtime multi-client subscription via Firestore snapshot listener
           unsubscribe = subscribeToFleet(
             ({ eventType, new: newRobot, old: oldId }) => {
               if (eventType === 'INSERT' && newRobot) {
@@ -339,37 +339,37 @@ export default function PlatformPage() {
           );
         }
       } catch (err) {
-        console.warn('Supabase initialization fallback:', err);
+        console.warn('Firebase initialization fallback:', err);
       }
     }
 
-    initSupabase();
+    initFirebase();
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
   }, []);
 
-  // Manual Push to Supabase Cloud
+  // Manual Push to Firebase Firestore Cloud
   const handleManualSync = async () => {
-    setSupabaseStatus(prev => ({ ...prev, isSyncing: true }));
+    setFirebaseStatus(prev => ({ ...prev, isSyncing: true }));
     try {
       const res = await bulkSyncFleet(robots, zones);
       if (res.success) {
-        addMessage('Supabase Cloud', 'Fleet', '⚡ Complete fleet telemetry and work zone state synchronized to cloud database.', 'CONFIRM');
-        setSupabaseStatus(prev => ({
+        addMessage('Firebase Cloud', 'Fleet', '⚡ Complete fleet telemetry and work zone state synchronized to Firebase Firestore.', 'CONFIRM');
+        setFirebaseStatus(prev => ({
           ...prev,
           connected: true,
           tablesReady: true,
           isSyncing: false,
-          message: 'Cloud Synced',
+          message: 'Firebase Synced',
         }));
       } else {
-        addMessage('Supabase Cloud', 'Fleet', `⚠️ Cloud sync notice: ${res.error}. Run supabase_schema.sql in Supabase SQL editor.`, 'ALERT');
-        setSupabaseStatus(prev => ({ ...prev, isSyncing: false, message: res.error || 'Sync failed' }));
+        addMessage('Firebase Cloud', 'Fleet', `⚠️ Cloud sync notice: ${res.error}. Check Firebase Firestore project configuration.`, 'ALERT');
+        setFirebaseStatus(prev => ({ ...prev, isSyncing: false, message: res.error || 'Sync failed' }));
       }
     } catch {
-      setSupabaseStatus(prev => ({ ...prev, isSyncing: false, message: 'Sync error' }));
+      setFirebaseStatus(prev => ({ ...prev, isSyncing: false, message: 'Sync error' }));
     }
   };
 
@@ -1016,7 +1016,7 @@ export default function PlatformPage() {
           </span>
         </div>
 
-        {/* Right: Overlays, Supabase, Sync Cloud, Run Demo, Inject Deadlock (side of heading) */}
+        {/* Right: Overlays, Firebase, Sync Cloud, Run Demo, Inject Deadlock (side of heading) */}
         <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'nowrap', flexShrink: 0 }}>
           {/* Overlay pills */}
           <div
@@ -1062,27 +1062,27 @@ export default function PlatformPage() {
             ))}
           </div>
 
-          {/* Supabase Status Pill */}
+          {/* Firebase Status Pill */}
           <div
-            title={supabaseStatus.message}
+            title={firebaseStatus.message}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 5,
               padding: '4px 10px',
               borderRadius: 9999,
-              background: supabaseStatus.connected
-                ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)')
+              background: firebaseStatus.connected
+                ? (firebaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)')
                 : 'rgba(100, 116, 139, 0.15)',
               border: `1px solid ${
-                supabaseStatus.connected
-                  ? (supabaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)')
+                firebaseStatus.connected
+                  ? (firebaseStatus.tablesReady ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)')
                   : 'rgba(100, 116, 139, 0.3)'
               }`,
               fontSize: 10.5,
               fontWeight: 700,
-              color: supabaseStatus.connected
-                ? (supabaseStatus.tablesReady ? '#4ade80' : '#facc15')
+              color: firebaseStatus.connected
+                ? (firebaseStatus.tablesReady ? '#4ade80' : '#facc15')
                 : '#94a3b8',
               backdropFilter: 'blur(12px)',
               whiteSpace: 'nowrap',
@@ -1093,19 +1093,19 @@ export default function PlatformPage() {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: supabaseStatus.connected
-                  ? (supabaseStatus.tablesReady ? '#22c55e' : '#eab308')
+                background: firebaseStatus.connected
+                  ? (firebaseStatus.tablesReady ? '#22c55e' : '#eab308')
                   : '#64748b',
-                boxShadow: supabaseStatus.connected && supabaseStatus.tablesReady ? '0 0 6px #22c55e' : 'none',
+                boxShadow: firebaseStatus.connected && firebaseStatus.tablesReady ? '0 0 6px #22c55e' : 'none',
               }}
             />
-            <span>{supabaseStatus.tablesReady ? 'Supabase Synced' : (supabaseStatus.connected ? 'Supabase Online' : 'Supabase Offline')}</span>
+            <span>{firebaseStatus.tablesReady ? 'Firebase Synced' : (firebaseStatus.connected ? 'Firebase Online' : 'Firebase Ready')}</span>
           </div>
 
-          {/* Sync Cloud */}
+          {/* Sync Firebase */}
           <button
             onClick={handleManualSync}
-            disabled={supabaseStatus.isSyncing}
+            disabled={firebaseStatus.isSyncing}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -1114,10 +1114,10 @@ export default function PlatformPage() {
               borderRadius: 9999,
               fontSize: 11,
               fontWeight: 700,
-              cursor: supabaseStatus.isSyncing ? 'not-allowed' : 'pointer',
-              background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%)',
-              border: '1px solid rgba(56, 189, 248, 0.5)',
-              color: '#38bdf8',
+              cursor: firebaseStatus.isSyncing ? 'not-allowed' : 'pointer',
+              background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.2) 100%)',
+              border: '1px solid rgba(245, 158, 11, 0.5)',
+              color: '#fbbf24',
               boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.4)',
               transition: 'all 0.2s ease',
               whiteSpace: 'nowrap',
@@ -1125,8 +1125,8 @@ export default function PlatformPage() {
             onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
             onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            <span>☁️</span>
-            <span>{supabaseStatus.isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+            <span>🔥</span>
+            <span>{firebaseStatus.isSyncing ? 'Syncing...' : 'Sync Firebase'}</span>
           </button>
 
           {/* Run Demo */}

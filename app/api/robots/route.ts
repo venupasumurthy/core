@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchRobots, upsertRobot, deleteRobot } from '@/lib/supabaseBackend';
+import { fetchRobots, upsertRobot, deleteRobot } from '@/lib/firebaseBackend';
 import type { PlatformRobot } from '@/types/platform';
 
 export async function GET() {

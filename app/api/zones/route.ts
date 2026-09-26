@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchZones, upsertZone, deleteZone } from '@/lib/supabaseBackend';
+import { fetchZones, upsertZone, deleteZone } from '@/lib/firebaseBackend';
 import type { WorkZone } from '@/types/platform';
 
 export async function GET() {

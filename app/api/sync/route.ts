@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { bulkSyncFleet } from '@/lib/supabaseBackend';
+import { bulkSyncFleet } from '@/lib/firebaseBackend';
 import type { PlatformRobot, WorkZone } from '@/types/platform';
 
 export async function POST(req: Request) {
@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       success: true,
       syncedRobots: robots.length,
       syncedZones: zones.length,
+      backend: 'Firebase Firestore',
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {

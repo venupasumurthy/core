@@ -13,7 +13,7 @@ const COLS = [
 ] as const;
 
 export default function MetricsBar({ tick, metrics, running }: Props) {
-  const vals: Record<string, number> = { tick, ...metrics };
+  const vals: Record<string, any> = { tick, ...metrics };
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12, padding: '16px 0' }}>
       {COLS.map(({ key, icon, label, color }) => (
