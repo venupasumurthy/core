@@ -2,7 +2,7 @@
 
 <div align="center">
   
-🌐 *Live Project:* [CORE - Coordination & Optimization for Robotic Exection](https://main.d1a3hk8x2zl4bw.amplifyapp.com/)  
+🌐 *Live Project:* [CORE - Coordination & Optimization for Robotic Execution](https://main.d1a3hk8x2zl4bw.amplifyapp.com/)  
 
 [![Static Badge](https://img.shields.io/badge/Project-CORE-blue?style=flat-square&logo=github)](https://core-6gz5.onrender.com/)
 [![Static Badge](https://img.shields.io/badge/Status-Active-success?style=flat-square)](https://core-6gz5.onrender.com/platform)
