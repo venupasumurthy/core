@@ -157,6 +157,24 @@ Open [http://localhost:3000/platform](http://localhost:3000/platform) to view th
 
 ---
 
+## 🧑‍💻 Developed By
+
+###  Ensemble 4
+> Empowering smart education through innovation and collaboration.
+
+| Name | Role | LinkedIn |
+|------|------|-----------|
+| Venu Munendra Kumar Pasumurthy | Team Lead , ML Developer | [LinkedIn](https://www.linkedin.com/in/venupasumurthy) |
+| Sai Charan Pasupuleti | AI Developer | [LinkedIn](https://www.linkedin.com/in/saicharanpasupuleti) |
+| Chandana Palamanda | Developer | [LinkedIn](https://www.linkedin.com/in/chandana-palamanda-a16675360) |
+| Aishwarya Natesan | Developer | [LinkedIn](http://www.linkedin.com/in/aishwarya-natesan-bb48a1360) |
+---
+📧 Contact:
+- chandanapalamanda13@gmail.com
+- venupasumurthy0509@gmail.com
+- natesanaishwarya@gmail.com
+- psai73873@gmail.com
+
 ## License
 
 MIT — Free to use, modify, and deploy.
